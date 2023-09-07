@@ -68,7 +68,7 @@
 //   useEffect(() => {
 //     // send changes to socket
 //     if (socket == null || quill == null) return
-//     const handler = (delta, oldDelta, source: string) => {
+//     const handler ,  sourcg) => {
 //       if (source !== 'user') return //make sure user made changes
 //       socket?.emit('send-changes', delta)
 //     }
@@ -99,7 +99,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import { useParams } from 'react-router-dom'
 
 const SAVE_INTERVAL_MS = 2000
@@ -116,9 +116,10 @@ const TOOLBAR_OPTIONS = [
 ]
 
 export default function TextEditor() {
-  const { id: documentId } = useParams()
-  const [socket, setSocket] = useState()
-  const [quill, setQuill] = useState()
+  const { id: documentId } = useParams<{ id: string }>() // Use useParams with TypeScript type definition.
+
+  const [socket, setSocket] = useState<Socket | null>(null)
+  const [quill, setQuill] = useState<Quill | null>(null)
 
   useEffect(() => {
     const s = io('https://gdoc-djmd.onrender.com')
@@ -155,7 +156,7 @@ export default function TextEditor() {
   useEffect(() => {
     if (socket == null || quill == null) return
 
-    const handler = (delta) => {
+    const handler = (delta: any) => {
       quill.updateContents(delta)
     }
     socket.on('receive-changes', handler)
@@ -168,7 +169,7 @@ export default function TextEditor() {
   useEffect(() => {
     if (socket == null || quill == null) return
 
-    const handler = (delta, oldDelta, source) => {
+    const handler = (delta: any, source: any) => {
       if (source !== 'user') return
       socket.emit('send-changes', delta)
     }
@@ -179,7 +180,7 @@ export default function TextEditor() {
     }
   }, [socket, quill])
 
-  const wrapperRef = useCallback((wrapper) => {
+  const wrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
     if (wrapper == null) return
 
     wrapper.innerHTML = ''
@@ -193,5 +194,6 @@ export default function TextEditor() {
     q.setText('Loading...')
     setQuill(q)
   }, [])
+
   return <div className='container' ref={wrapperRef}></div>
 }
